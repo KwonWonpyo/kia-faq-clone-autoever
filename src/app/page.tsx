@@ -1,4 +1,125 @@
+'use client';
+
+import { useState, useEffect } from "react";
+import { Accordion } from "@/components/Common/Accordion";
+import { Tabs } from "@/components/Common/Tabs";
+import { Filter } from "@/components/Common/Filter";
+import { SearchBar } from "@/components/SearchBar";
+import { FAQList } from "@/components/FAQList";
+import { useMSW } from '@/contexts/MSWContext';
+
+// FAQ 아이템 타입 정의
+type FAQItem = {
+  id: number;
+  categoryName: string;
+  subCategoryName: string;
+  question: string;
+  answer: string;
+};
+
+// 페이지 정보 타입 정의
+type PageInfo = {
+  totalRecord: number;
+  offset: number;
+  limit: number;
+  prevOffset: number;
+  nextOffset: number;
+};
+
+// FAQ 응답 타입 정의
+type FAQResponse = {
+  pageInfo: PageInfo;
+  items: FAQItem[];
+};
+
 export default function Home() {
+  const { isInitialized } = useMSW();
+  const [activeTab, setActiveTab] = useState<"CONSULT" | "USAGE">("CONSULT");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeFilter, setActiveFilter] = useState("all");
+  const [filterOptions, setFilterOptions] = useState<Array<{ id: string; label: string }>>([]);
+  const [faqs, setFaqs] = useState<FAQItem[]>([]);
+  const [pageInfo, setPageInfo] = useState<PageInfo | null>(null);
+  
+  // API에서 필터 옵션 가져오기
+  useEffect(() => {
+    if (isInitialized) {
+      const fetchFilterOptions = async () => {
+        try {
+          const response = await fetch(`/api/category?tab=${activeTab}`);
+          const data = await response.json();
+          
+          // API 응답 데이터를 컴포넌트에서 사용하는 형식으로 변환
+          const formattedOptions = [
+            { id: "all", label: "전체" },
+            ...data.map((option: { categoryID: string; name: string }) => ({
+              id: option.categoryID.toLowerCase(),
+              label: option.name
+            }))
+          ];
+          
+          setFilterOptions(formattedOptions);
+        } catch (error) {
+          console.error("필터 옵션을 가져오는데 실패했습니다:", error);
+        }
+      };
+
+      fetchFilterOptions();
+    }
+  }, [isInitialized, activeTab]);
+  
+  // FAQ 데이터 가져오기
+  useEffect(() => {
+    if (isInitialized) {
+      const fetchFaqs = async () => {
+        try {
+          const response = await fetch(`/api/faqs?limit=10&offset=0&tab=${activeTab}`);
+          const data: FAQResponse = await response.json();
+          setFaqs(data.items);
+          setPageInfo(data.pageInfo);
+        } catch (error) {
+          console.error("FAQ 데이터를 가져오는데 실패했습니다:", error);
+        }
+      };
+
+      fetchFaqs();
+    }
+  }, [isInitialized, activeTab]);
+  
+  // 탭 항목 정의
+  const tabItems = [
+    { id: "consult", label: "서비스 도입" },
+    { id: "usage", label: "서비스 이용" }
+  ];
+  
+  // 탭 변경 핸들러
+  const handleTabChange = (tabId: string) => {
+    setActiveTab(tabId.toUpperCase() as "CONSULT" | "USAGE");
+    setActiveFilter("all"); // 탭 변경 시 필터 초기화
+  };
+  
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+  };
+  
+  // 필터 변경 핸들러
+  const handleFilterChange = (optionId: string) => {
+    setActiveFilter(optionId);
+  };
+  
+  // FAQ 아이템 정의
+  const faqItems = faqs.map((faq) => ({
+    id: faq.id,
+    category: faq.categoryName,
+    subCategory: faq.subCategoryName,
+    title: faq.question,
+    content: faq.answer
+  }));
+
+  if (!isInitialized) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <div className="container">
       <div className="content">
@@ -6,143 +127,31 @@ export default function Home() {
           자주 묻는 질문 <em>궁금하신 내용을 빠르게 찾아보세요.</em>
         </h1>
         <i className="sticky-checker" />
-        <ul className="tabs">
-          <li className="active">
-            <a>
-              <span>서비스 도입</span>
-            </a>
-          </li>
-          <li>
-            <a>
-              <span>서비스 이용</span>
-            </a>
-          </li>
-        </ul>
-        <form>
-          <div className="search">
-            <div className="input-wrap">
-              <input type="text" placeholder="찾으시는 내용을 입력해 주세요" value="" readOnly />
-              <button type="button" className="clear" data-ui-click="input-clear">
-                다시입력
-              </button>
-              <button type="button" className="submit">
-                검색
-              </button>
-            </div>
-          </div>
-        </form>
-        <div className="filter">
-          <label>
-            <input type="radio" name="filter" defaultChecked />
-            <i>전체</i>
-          </label>
-          <label>
-            <input type="radio" name="filter" />
-            <i>서비스 상품</i>
-          </label>
-          <label>
-            <input type="radio" name="filter" />
-            <i>도입 상담</i>
-          </label>
-          <label>
-            <input type="radio" name="filter" />
-            <i>계약</i>
-          </label>
+        
+        <Tabs 
+          items={tabItems} 
+          activeTab={activeTab.toLowerCase()} 
+          onTabChange={handleTabChange} 
+        />
+        
+        <div className="mt-8 space-y-6">
+          <SearchBar onSearch={handleSearch} />
+          
+          <Filter
+            options={filterOptions}
+            activeOption={activeFilter}
+            onOptionChange={handleFilterChange}
+          />
+          
+          {/* <FAQList
+            searchQuery={searchQuery}
+            selectedFilter={activeFilter}
+            faqs={faqItems}
+          /> */}
         </div>
-        <ul className="faq-list">
-          <li data-ui-item="true">
-            <h4 className="a">
-              <button type="button" data-ui-click="dropdown-toggle">
-                <em>서비스 상품</em>
-                <strong>기아 비즈에서는 어떤 상품을 이용할 수 있나요?</strong>
-              </button>
-            </h4>
-            <div className="q" data-ui-target="true">
-              <div className="inner">
-                <p>
-                  소속 회사가 기아 비즈 이용 계약이 되어있다면,
-                  <br />
-                  업무 시간에는 이용 건별 별도 결제 없이 편리하게 업무용 차량을 이용할 수 있고(대여 요금은 소속 회사에서
-                  부담),
-                  <br />
-                  비업무 시간에는 출퇴근 및 주말 여가옹으로 차량을 이용 (대여 요금은 개인이 부담) 할 수 있습니다.
-                </p>
-                <p>&nbsp;</p>
-                <p>
-                  자세한 상품 안내는 메뉴 &gt; 하단의 &apos;이용가이드&apos; &gt; 상품 안내 탭을 통해 확인하실 수
-                  있습니다.
-                  <br />
-                  &nbsp;
-                </p>
-                <p>&nbsp;</p>
-              </div>
-            </div>
-          </li>
-          <li data-ui-item="true">
-            <h4 className="a">
-              <button type="button" data-ui-click="dropdown-toggle">
-                <em>서비스 상품</em>
-                <strong>기아 비즈 비즈니스용 상품 이용 시 무엇이 좋은가요?</strong>
-              </button>
-            </h4>
-            <div className="q" data-ui-target="true">
-              <div className="inner">
-                <p>기아 비즈의 &apos;비즈니스 상품&apos; 이용 시, 기존 차량 이용 대비 아래와 같은 장점이 있습니다.</p>
-                <p>
-                  - 차량 보유 및 유지관리비 부담 없이, 우리 회사의 차량 이용 패턴에 딱 맞는 상품으로 계약 후 업무용 차량
-                  운영 가능
-                </p>
-                <p>- App 하나로 편하게 예약하고, 스마트키로 제어하는 비대면 간편 대여</p>
-                <p>- 회사가 등록한 결제 수단으로 자동 결제 및 간편한 증빙 가능</p>
-                <p>
-                  * 재직 중인 회사의 기아 비즈 차량 이용과 관련한 자세한 내용은 사내 기아 비즈 담당자에게 문의하시기
-                  바랍니다.
-                </p>
-              </div>
-            </div>
-          </li>
-          <li data-ui-item="true">
-            <h4 className="a">
-              <button type="button" data-ui-click="dropdown-toggle">
-                <em>도입 상담</em>
-                <strong>비즈니스 상품 도입 기간은 얼마나 걸리나요?</strong>
-              </button>
-            </h4>
-            <div className="q" data-ui-target="true">
-              <div className="inner">
-                <p>
-                  <span style={{ fontSize: '13pt', color: 'rgba(106, 122, 135, 1)', wordBreak: 'keep-all' }}>
-                    기아 비즈 도입 상담을 신청하신 경우, 빠른 시일 내에 기재해주신 연락처로 연락드릴 예정입니다.
-                  </span>
-                </p>
-                <p>
-                  <span style={{ fontSize: '13pt', color: 'rgba(106, 122, 135, 1)', wordBreak: 'keep-all' }}>
-                    담당자와의 1:1 상담 후 최대한 원하시는 시기에 맞춰 서비스가 도입될 수 있도록 도와드리고 있으나,
-                    도입하시는 상품에 따라 소요되는 기간은 다소 상이할 수 있습니다.
-                  </span>
-                </p>
-              </div>
-            </div>
-          </li>
-          <li data-ui-item="true">
-            <h4 className="a">
-              <button type="button" data-ui-click="dropdown-toggle">
-                <em>계약</em>
-                <strong>비즈니스 상품 도입 절차가 어떻게 되나요?</strong>
-              </button>
-            </h4>
-            <div className="q" data-ui-target="true">
-              <div className="inner">
-                <p>기아 비즈 &apos;비즈니스 상품&apos; 도입 절차는 아래와 같습니다.</p>
-                <p>① 상담 문의 등록 후 1:1 맞춤 상담 진행</p>
-                <p>② 서비스 도입 상품 및 세부 조건 협의 후 계약 진행</p>
-                <p>③ 관리자 Web 계정 생성 후 회사 정보 설정</p>
-                <p>④ 임직원 회원가입 진행</p>
-                <p>⑤ 전용 K존에서 차량 대여 및 이용</p>
-              </div>
-            </div>
-          </li>
-        </ul>
+        
+        <Accordion items={faqItems} activeTab={activeTab} />
+        
         <h2 className="heading-2">서비스 문의</h2>
         <div className="inquiry-info">
           <a
