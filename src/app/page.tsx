@@ -53,6 +53,9 @@ export default function Home() {
           ]);
         } catch (error) {
           console.error("필터 옵션을 가져오는데 실패했습니다:", error);
+          // FIXME) MSW가 초기화되지 않았으면 1000ms 후에 재시도
+          // isInitialized 변수를 사용하여 MSW 초기화 여부를 확인하였음에도 간헐적으로 MSW 응답이 없는 오류 발생
+          setTimeout(fetchFilterOptions, 1000);
         }
       };
 
@@ -72,6 +75,8 @@ export default function Home() {
           setPageInfo(data.pageInfo);
         } catch (error) {
           console.error("FAQ 데이터를 가져오는데 실패했습니다:", error);
+          // FIXME) MSW가 초기화되지 않았으면 1000ms 후에 재시도
+          setTimeout(fetchFaqs, 1000);
         }
       };
       fetchFaqs();
