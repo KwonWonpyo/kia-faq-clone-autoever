@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useDialog } from '@/hooks/useDialog';
 import PolicyDialog from '../PolicyDialog';
 
 const Footer = () => {
-  const [isPolicyDialogOpen, setIsPolicyDialogOpen] = useState(false);
+  const { Dialog, open, close } = useDialog();
 
   return (
     <footer>
@@ -12,7 +12,7 @@ const Footer = () => {
         <div className="information">
           <span className="util">
             <button type="button" onClick={() => window.open('https://privacy.kia.com/overview/full-policy', '_blank')}><b>개인정보 처리방침</b></button>
-            <button type="button" onClick={() => setIsPolicyDialogOpen(true)}><b>이용약관</b></button>
+            <button type="button" onClick={open}><b>이용약관</b></button>
           </span>
           <address>
             <span>서울특별시 서초구 헌릉로 12 <em>기아㈜</em></span>
@@ -30,7 +30,9 @@ const Footer = () => {
         </div>
         <p className="copyright">© 2023 KIA CORP. All Rights Reserved.</p>
       </div>
-      <PolicyDialog open={isPolicyDialogOpen} onClose={() => setIsPolicyDialogOpen(false)} />
+      <Dialog>
+        <PolicyDialog onClose={close} />
+      </Dialog>
     </footer>
   );
 };

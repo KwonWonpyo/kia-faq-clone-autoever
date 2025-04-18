@@ -3287,7 +3287,7 @@ dialog[closing]::backdrop {
 }
 .dialog-policy .policy-top + div * {
 	font-size: 12px !important;
-	line-height: var(--line-height-sm) !important;
+	line-height: var(--line-height-lg) !important;
 	text-indent: 0 !important;
 	word-break: break-all !important;
 }
