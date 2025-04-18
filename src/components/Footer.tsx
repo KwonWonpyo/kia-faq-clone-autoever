@@ -1,7 +1,7 @@
 'use client';
 
 import { useDialog } from '@/hooks/useDialog';
-import PolicyDialog from '../PolicyDialog';
+import PolicyDialog from './PolicyDialog';
 
 const Footer = () => {
   const { Dialog, open, close } = useDialog();

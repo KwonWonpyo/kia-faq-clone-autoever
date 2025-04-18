@@ -3438,7 +3438,7 @@ section.visual .text {
 	position: absolute;
 	left: 0;
 	/* top: calc(var(--sequence-space-top) + 8%); */
-	bottom: var(--sequence-vis-bottom);
+	bottom: 120px;
 	color: #fff;
 }
 section.visual .text > h1 {
