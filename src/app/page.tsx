@@ -3,9 +3,8 @@
 import { useState, useEffect } from "react";
 import { Accordion } from "@/components/Common/Accordion";
 import { Tabs } from "@/components/Common/Tabs";
-import { Filter } from "@/components/Common/Filter";
+import { Filter, FilterOption } from "@/components/Common/Filter";
 import { SearchBar } from "@/components/SearchBar";
-import { FAQList } from "@/components/FAQList";
 import { useMSW } from '@/contexts/MSWContext';
 
 // FAQ 아이템 타입 정의
@@ -28,8 +27,8 @@ type PageInfo = {
 
 // FAQ 응답 타입 정의
 type FAQResponse = {
-  pageInfo: PageInfo;
   items: FAQItem[];
+  pageInfo: PageInfo;
 };
 
 export default function Home() {
@@ -37,7 +36,7 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<"CONSULT" | "USAGE">("CONSULT");
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
-  const [filterOptions, setFilterOptions] = useState<Array<{ id: string; label: string }>>([]);
+  const [filterOptions, setFilterOptions] = useState<Array<FilterOption>>([]);
   const [faqs, setFaqs] = useState<FAQItem[]>([]);
   const [pageInfo, setPageInfo] = useState<PageInfo | null>(null);
   
@@ -48,17 +47,10 @@ export default function Home() {
         try {
           const response = await fetch(`/api/category?tab=${activeTab}`);
           const data = await response.json();
-          
-          // API 응답 데이터를 컴포넌트에서 사용하는 형식으로 변환
-          const formattedOptions = [
-            { id: "all", label: "전체" },
-            ...data.map((option: { categoryID: string; name: string }) => ({
-              id: option.categoryID.toLowerCase(),
-              label: option.name
-            }))
-          ];
-          
-          setFilterOptions(formattedOptions);
+          setFilterOptions([
+            { categoryID: "all", name: "전체" },
+            ...data
+          ]);
         } catch (error) {
           console.error("필터 옵션을 가져오는데 실패했습니다:", error);
         }
@@ -73,7 +65,8 @@ export default function Home() {
     if (isInitialized) {
       const fetchFaqs = async () => {
         try {
-          const response = await fetch(`/api/faqs?limit=10&offset=0&tab=${activeTab}`);
+          const categoryParam = activeFilter !== "all" ? `&faqCategoryID=${activeFilter}` : "";
+          const response = await fetch(`/api/faqs?limit=10&offset=0&tab=${activeTab}${categoryParam}`);
           const data: FAQResponse = await response.json();
           setFaqs(data.items);
           setPageInfo(data.pageInfo);
@@ -81,10 +74,9 @@ export default function Home() {
           console.error("FAQ 데이터를 가져오는데 실패했습니다:", error);
         }
       };
-
       fetchFaqs();
     }
-  }, [isInitialized, activeTab]);
+  }, [isInitialized, activeTab, activeFilter]);
   
   // 탭 항목 정의
   const tabItems = [
@@ -106,7 +98,21 @@ export default function Home() {
   const handleFilterChange = (optionId: string) => {
     setActiveFilter(optionId);
   };
-  
+
+  const handleLoadMore = () => {
+    const fetchFaqs = async (offset: number) => {
+      try {
+        const categoryParam = activeFilter !== "all" ? `&faqCategoryID=${activeFilter}` : "";
+        const response = await fetch(`/api/faqs?limit=10&offset=${offset}&tab=${activeTab}${categoryParam}`);
+        const data: FAQResponse = await response.json();
+        setFaqs([...faqs, ...data.items]);
+        setPageInfo(data.pageInfo);
+      } catch (error) {
+        console.error("FAQ 데이터를 가져오는데 실패했습니다:", error);
+      }
+    };
+    fetchFaqs(pageInfo?.nextOffset ?? 0);
+  };
   // FAQ 아이템 정의
   const faqItems = faqs.map((faq) => ({
     id: faq.id,
@@ -127,31 +133,25 @@ export default function Home() {
           자주 묻는 질문 <em>궁금하신 내용을 빠르게 찾아보세요.</em>
         </h1>
         <i className="sticky-checker" />
-        
         <Tabs 
           items={tabItems} 
           activeTab={activeTab.toLowerCase()} 
           onTabChange={handleTabChange} 
         />
-        
         <div className="mt-8 space-y-6">
           <SearchBar onSearch={handleSearch} />
-          
           <Filter
             options={filterOptions}
             activeOption={activeFilter}
             onOptionChange={handleFilterChange}
           />
-          
-          {/* <FAQList
-            searchQuery={searchQuery}
-            selectedFilter={activeFilter}
-            faqs={faqItems}
-          /> */}
         </div>
-        
         <Accordion items={faqItems} activeTab={activeTab} />
-        
+        {pageInfo && pageInfo?.totalRecord > faqItems.length && (
+          <button type="button" className="list-more" onClick={handleLoadMore}>
+            <i></i>더보기
+          </button>
+        )}
         <h2 className="heading-2">서비스 문의</h2>
         <div className="inquiry-info">
           <a

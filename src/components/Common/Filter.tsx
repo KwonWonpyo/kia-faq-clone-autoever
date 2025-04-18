@@ -1,8 +1,8 @@
 'use client';
 
-interface FilterOption {
-  id: string;
-  label: string;
+export interface FilterOption {
+  categoryID: string;
+  name: string;
 }
 
 interface FilterProps {
@@ -15,14 +15,14 @@ export const Filter = ({ options, activeOption, onOptionChange }: FilterProps) =
   return (
     <div className="filter">
       {options.map((option) => (
-        <label key={option.id}>
+        <label key={option.categoryID}>
           <input 
             type="radio" 
             name="filter" 
-            checked={activeOption === option.id}
-            onChange={() => onOptionChange(option.id)}
+            checked={activeOption === option.categoryID}
+            onChange={() => onOptionChange(option.categoryID)}
           />
-          <i>{option.label}</i>
+          <i>{option.name}</i>
         </label>
       ))}
     </div>
