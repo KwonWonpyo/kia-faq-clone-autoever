@@ -830,6 +830,7 @@ export const handlers = [
     const limit = parseInt(url.searchParams.get('limit') || '10');
     const offset = parseInt(url.searchParams.get('offset') || '0');
     const category = url.searchParams.get('faqCategoryID');
+    const searchQuery = url.searchParams.get('question');
 
     const data = tab === 'CONSULT' ? newFaqData.CONSULT : newFaqData.USAGE;
 
@@ -842,6 +843,23 @@ export const handlers = [
       } else if (tab === 'USAGE') {
         filteredItems = data.items.filter((item) => item.categoryName === categoryKR);
       }
+    }
+
+    // 검색 필터링 적용
+    if (searchQuery) {
+      filteredItems = filteredItems.filter((item) => {
+        if (item.question.includes(searchQuery)) {
+          return item;
+        } else if (item.answer.includes(searchQuery)) {
+          return item;
+        } else if (item.categoryName.includes(searchQuery)) {
+          return item;
+        } else if (item.subCategoryName.includes(searchQuery)) {
+          return item;
+        } else {
+          return null;
+        }
+      });
     }
 
     // 페이지네이션 적용
@@ -857,13 +875,6 @@ export const handlers = [
       },
       items,
     });
-  }),
-
-  // FAQ 상세 API
-  http.get('/api/faqs/:id', ({ params }) => {
-    const id = Number(params.id);
-    const faq = [...newFaqData.CONSULT.items, ...newFaqData.USAGE.items].find((item) => item.id === id);
-    return HttpResponse.json(faq);
   }),
 
   // 카테고리 API

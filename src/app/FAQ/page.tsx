@@ -6,6 +6,8 @@ import { Tabs } from "@/components/Tabs";
 import { Filter, FilterOption } from "@/components/Filter";
 import { SearchBar } from "@/components/SearchBar";
 import { useMSW } from '@/contexts/MSWContext';
+import { NoData } from "@/components/NoData";
+import { SearchInfo } from "@/components/SearchInfo";
 
 // FAQ 아이템 타입 정의
 type FAQItem = {
@@ -97,6 +99,35 @@ export default function FAQ() {
   
   const handleSearch = (query: string) => {
     setSearchQuery(query);
+    const fetchFaqs = async () => {
+      try {
+        const categoryParam = activeFilter !== "all" ? `&faqCategoryID=${activeFilter}` : "";
+        const searchParam = query ? `&question=${query}` : "";
+        const response = await fetch(`/api/faqs?limit=10&offset=0&tab=${activeTab}${categoryParam}${searchParam}`);
+        const data: FAQResponse = await response.json();
+        setFaqs(data.items);
+        setPageInfo(data.pageInfo);
+      } catch (error) {
+        console.error("FAQ 데이터를 가져오는데 실패했습니다:", error);
+      }
+    };
+    fetchFaqs();
+  };
+
+  const handleReset = () => {
+    setSearchQuery("");
+    setActiveFilter("all");
+    const fetchFaqs = async () => {
+      try {
+        const response = await fetch(`/api/faqs?limit=10&offset=0&tab=${activeTab}`);
+        const data: FAQResponse = await response.json();
+        setFaqs(data.items);
+        setPageInfo(data.pageInfo);
+      } catch (error) {
+        console.error("FAQ 데이터를 가져오는데 실패했습니다:", error);
+      }
+    };
+    fetchFaqs();
   };
   
   // 필터 변경 핸들러
@@ -108,7 +139,8 @@ export default function FAQ() {
     const fetchFaqs = async (offset: number) => {
       try {
         const categoryParam = activeFilter !== "all" ? `&faqCategoryID=${activeFilter}` : "";
-        const response = await fetch(`/api/faqs?limit=10&offset=${offset}&tab=${activeTab}${categoryParam}`);
+        const searchParam = searchQuery ? `&question=${searchQuery}` : "";
+        const response = await fetch(`/api/faqs?limit=10&offset=${offset}&tab=${activeTab}${categoryParam}${searchParam}`);
         const data: FAQResponse = await response.json();
         setFaqs([...faqs, ...data.items]);
         setPageInfo(data.pageInfo);
@@ -131,8 +163,6 @@ export default function FAQ() {
     return <div>Loading...</div>;
   }
 
-  console.log(searchQuery); // 빌드 에러를 위해 임시 로그
-
   return (
     <div className="container">
       <div className="content">
@@ -145,20 +175,24 @@ export default function FAQ() {
           activeTab={activeTab.toLowerCase()} 
           onTabChange={handleTabChange} 
         />
-        <div className="mt-8 space-y-6">
-          <SearchBar onSearch={handleSearch} />
-          <Filter
-            options={filterOptions}
-            activeOption={activeFilter}
-            onOptionChange={handleFilterChange}
-          />
-        </div>
-        <Accordion items={faqItems} activeTab={activeTab} />
-        {pageInfo && pageInfo?.totalRecord > faqItems.length && (
-          <button type="button" className="list-more" onClick={handleLoadMore}>
-            <i></i>더보기
-          </button>
-        )}
+        <SearchBar onSearch={handleSearch} reset={!searchQuery} />
+        { searchQuery && <SearchInfo totalRecord={pageInfo?.totalRecord ?? 0} handleReset={handleReset} />}
+        <Filter
+          options={filterOptions}
+          activeOption={activeFilter}
+          onOptionChange={handleFilterChange}
+        />
+        {faqs.length === 0 ?
+          <NoData /> :
+          <>
+            <Accordion items={faqItems} activeTab={activeTab} />
+            {pageInfo && pageInfo?.totalRecord > faqItems.length && (
+              <button type="button" className="list-more" onClick={handleLoadMore}>
+                <i></i>더보기
+              </button>
+            )}
+          </>
+        }
         <h2 className="heading-2">서비스 문의</h2>
         <div className="inquiry-info">
           <a
