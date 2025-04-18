@@ -18,6 +18,7 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <Providers>
+          <div id="portal-root" />
           <Header />
           {children}
           <Footer />
