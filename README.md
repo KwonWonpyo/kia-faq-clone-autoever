@@ -16,13 +16,16 @@
   - 아코디언 형태의 FAQ 답변 표시
   - 반응형 웹 디자인
   - 모바일 최적화 네비게이션
+- **Top-layer를 이용한 다이얼로그**
+  - useDialog 커스텀 hook 구현
+  - UI와 DOM을 분리하여 재활용성 향상
+  - 브라우저의 top-layer와 ::back-drop 스타일 활용
 
 ## 기술 스택
 
 - **Framework**: Next.js
 - **Library**: React
 - **API Mocking**: MSW (Mock Service Worker)
-- **Data Fetching**: React-Query
 - **Code Quality**: ESLint, Prettier
 - **Styling**: Vanilla CSS
 
@@ -31,19 +34,20 @@
 ### 완료된 기능 ✅
 
 - 웹/모바일 반응형 페이지 기본 구조
+- MSW를 활용한 API 모킹 환경 구성
 - 서비스 도입/이용 탭 구현
 - FAQ 데이터 연동 및 표시
-- MSW를 활용한 API 모킹 환경 구성
+  - FAQ 카테고리 필터 구현
+  - FAQ 검색 기능 개발
+- 서비스 문의 버튼 3종 기능
 - 공통 컴포넌트 구조화
   - Header 컴포넌트
   - Footer 컴포넌트
   - Accordion 컴포넌트
+- 다이얼로그 표시 기능
 
 ### 진행 중인 기능 🚧
 
-- FAQ 카테고리 필터 구현
-- FAQ 검색 기능 개발
-- 서비스 문의 버튼 3종 기능
 - 모바일 네비게이션 개선
 
 ## 설치 및 실행 방법
@@ -68,22 +72,3 @@ src/
   ├── mocks/            # MSW 관련 파일
   └── types/            # TypeScript 타입 정의
 ```
-
-## 향후 계획
-
-1. **기능 개선**
-
-   - FAQ 검색 엔진 고도화
-   - 카테고리 필터링 UX 개선
-   - 실시간 데이터 업데이트 구현
-
-2. **성능 최적화**
-
-   - 컴포넌트 렌더링 최적화
-   - 이미지 최적화
-   - 번들 사이즈 최적화
-
-3. **사용자 경험 개선**
-   - 접근성 강화
-   - 로딩 상태 개선
-   - 에러 처리 강화
