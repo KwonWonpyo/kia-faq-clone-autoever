@@ -32,7 +32,7 @@ export function useDialog() {
       const node = (
         <dialog
           ref={dialogRef}
-          style={{ margin: "20px auto", padding: "20px", zIndex: 1000, position: "fixed" }} 
+          style={{ margin: "auto", padding: "20px", zIndex: 1000 }} 
         >
           {children}
         </dialog>

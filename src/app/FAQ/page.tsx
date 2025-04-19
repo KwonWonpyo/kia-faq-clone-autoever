@@ -8,7 +8,8 @@ import { SearchBar } from "@/components/SearchBar";
 import { useMSW } from '@/contexts/MSWContext';
 import { NoData } from "@/components/NoData";
 import { SearchInfo } from "@/components/SearchInfo";
-
+import { useDialog } from "@/hooks/useDialog";
+import ErrorDialog from "@/components/ErrorDialog";
 // FAQ 아이템 타입 정의
 type FAQItem = {
   id: number;
@@ -41,7 +42,7 @@ export default function FAQ() {
   const [filterOptions, setFilterOptions] = useState<Array<FilterOption>>([]);
   const [faqs, setFaqs] = useState<FAQItem[]>([]);
   const [pageInfo, setPageInfo] = useState<PageInfo | null>(null);
-  
+  const { Dialog, open, close } = useDialog();
   // API에서 필터 옵션 가져오기
   useEffect(() => {
     if (isInitialized) {
@@ -98,6 +99,13 @@ export default function FAQ() {
   };
   
   const handleSearch = (query: string) => {
+    if (query.length === 0) {
+      return;
+    }
+    if (query.length < 2) {
+      open();
+      return;
+    }
     setSearchQuery(query);
     const fetchFaqs = async () => {
       try {
@@ -261,16 +269,9 @@ export default function FAQ() {
             App Store
           </a>
         </div>
-        <dialog className="dialog-wrapper dialog-error" id="error_faq">
-          <div className="dialog-body" style={{ marginTop: '35px' }}>
-            <p className="message">검색어는 2글자 이상 입력해주세요.</p>
-            <div className="button-group">
-              <button type="button" className="btn-xlg btn-tertiary">
-                확인
-              </button>
-            </div>
-          </div>
-        </dialog>
+        <Dialog>
+          <ErrorDialog onClose={close} />
+        </Dialog>
       </div>
     </div>
   );
