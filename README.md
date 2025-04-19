@@ -25,13 +25,13 @@ npm run dev
 
 ## 결과물 스크린샷 📸
 
-### 데스크톱 화면
+### <데스크톱 화면>
 
-<img src="./public/screenshots/desktop.jpg" alt="데스크톱 화면" width="600" />
+<img src="./public/screenshots/desktop.JPG" alt="데스크톱 화면" width="600" />
 
-### 모바일 화면
+### <모바일 화면>
 
-<img src="./public/screenshots/mobile.jpg" alt="모바일 화면" width="300" />
+<img src="./public/screenshots/mobile.JPG" alt="모바일 화면" width="300" />
 
 ## 핵심 기능 ⭐
 
