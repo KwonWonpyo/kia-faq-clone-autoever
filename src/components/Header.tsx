@@ -7,7 +7,7 @@ const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
-    <>
+    <div className={`${isMobileMenuOpen ? 'nav-opened' : ''}`}>
       <header>
         <div className="inner">
           <Link href="https://wiblebiz.kia.com/" className="logo">Kia BIZ</Link>
@@ -31,7 +31,7 @@ const Header = () => {
           </span>
         </div>
       </header>
-    </>
+    </div>
   );
 };
 
